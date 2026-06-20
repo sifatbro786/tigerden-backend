@@ -1,7 +1,7 @@
 {
-    "name": "tigersden-tourism-backend",
+    "name": "tigerden-tourism-backend",
     "version": "1.0.0",
-    "description": "Backend system for Tigersden Tourism Platform",
+    "description": "Backend system for Tigerden Tourism Platform",
     "main": "server.js",
     "type": "module",
     "scripts": {

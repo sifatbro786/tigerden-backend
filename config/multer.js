@@ -11,7 +11,7 @@ const createCloudinaryStorage = (folder) =>
         cloudinary,
         params: {
             folder: `tigersden/${folder}`,
-            allowed_formats: ["jpg", "jpeg", "png", "webp"],
+            allowed_formats: ["jpg", "jpeg", "png", "webp", "jfif"],
             transformation: [{ width: 1200, crop: "limit" }],
         },
     });

@@ -1,6 +1,6 @@
-# 🐯 Tigersden Tourism — Backend API
+# 🐯 Tigerden Tourism — Backend API
 
-Production-ready Node.js/Express/MongoDB backend for the Tigersden Tourism platform.
+Production-ready Node.js/Express/MongoDB backend for the Tigerden Tourism platform.
 
 ## Stack
 - Node.js (ES Modules)
@@ -29,14 +29,13 @@ See `.env.example`. Key ones:
 
 ## Folder Structure
 ```
-src/
-  config/        # db.js, cloudinary.js, multer.js
-  controllers/   # business logic per resource
-  models/        # Mongoose schemas
-  routes/        # public routes (+ routes/admin for protected CRUD)
-  middlewares/    # auth, admin, optionalAuth, error handler
-  services/      # loyaltyService, couponService, emailService
-  utils/         # ApiError, asyncHandler, generateToken
+config/        # db.js, cloudinary.js, multer.js
+controllers/   # business logic per resource
+models/        # Mongoose schemas
+routes/        # public routes (+ routes/admin for protected CRUD)
+middlewares/    # auth, admin, optionalAuth, error handler
+services/      # loyaltyService, couponService, emailService
+utils/         # ApiError, asyncHandler, generateToken
 server.js
 ```
 
@@ -79,8 +78,8 @@ When sending via `multipart/form-data` (because of file uploads), nested fields 
 
 ## Business Logic Notes
 - **Flash Sale**: `isFlashSale: true` + `flashSaleEndTime` (future date). A virtual `isFlashSaleLive` is computed automatically.
-- **Coupon validation** (`src/services/couponService.js`): checks existence, active flag, expiry, usage limit; computes percentage or flat discount, capped at the price.
-- **Loyalty tiers** (`src/services/loyaltyService.js`): `new` → `regular` (>= `LOYALTY_BOOKING_THRESHOLD` bookings) → `premium` (>= 2x threshold), each tier granting an automatic discount percentage. Call `updateUserLoyalty(user, amountSpent)` after a booking is confirmed elsewhere in your system to update `totalBookings`/`totalSpent`/`loyaltyTier`.
+- **Coupon validation** (`services/couponService.js`): checks existence, active flag, expiry, usage limit; computes percentage or flat discount, capped at the price.
+- **Loyalty tiers** (`services/loyaltyService.js`): `new` → `regular` (>= `LOYALTY_BOOKING_THRESHOLD` bookings) → `premium` (>= 2x threshold), each tier granting an automatic discount percentage. Call `updateUserLoyalty(user, amountSpent)` after a booking is confirmed elsewhere in your system to update `totalBookings`/`totalSpent`/`loyaltyTier`.
 - Coupon discount and loyalty discount stack: coupon is applied first, then loyalty discount is applied to the resulting price.
 
 ## Error Handling

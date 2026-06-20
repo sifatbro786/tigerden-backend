@@ -18,6 +18,7 @@ export const optionalAuthMiddleware = async (req, res, next) => {
         }
     } catch (error) {
         // Silently ignore — treat as unauthenticated
+        console.error(error);
     }
     next();
 };

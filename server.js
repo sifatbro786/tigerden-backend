@@ -28,10 +28,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // ----- Health Check -----
 app.get("/", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "🐯 Tigersden Tourism API is running",
-  });
+    res.status(200).json({
+        success: true,
+        message: "🐯 Tigersden Tourism API is running",
+    });
 });
 
 // ----- Public Routes -----
@@ -47,7 +47,7 @@ app.use("/api/admin", adminRoutes);
 
 // ----- 404 Handler -----
 app.use((req, res) => {
-  res.status(404).json({ success: false, message: "Route not found" });
+    res.status(404).json({ success: false, message: "Route not found" });
 });
 
 // ----- Global Error Handler (must be last) -----
@@ -55,5 +55,5 @@ app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
