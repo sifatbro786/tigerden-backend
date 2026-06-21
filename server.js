@@ -12,17 +12,36 @@ import blogRoutes from "./routes/blogRoutes.js";
 import testimonialRoutes from "./routes/testimonialRoutes.js";
 import teamRoutes from "./routes/teamRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
+import pageMetaRoutes from "./routes/pageMetaRoutes.js";
 
 // Protected admin route group (auth + admin middleware applied internally)
 import adminRoutes from "./routes/admin/index.js";
+// import seedSuperAdmin from "./utils/seedAdmin.js";
 
 dotenv.config();
+
+// connectDB().then(() => seedSuperAdmin());
 connectDB();
 
 const app = express();
 
 // ----- Global Middlewares -----
-app.use(cors());
+const allowedOrigins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "https://tigerden-frontend.vercel.app",
+];
+
+app.use(
+    cors({
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+            console.log("Blocked origin:", origin);
+            return callback(null, true);
+        },
+        credentials: true,
+    }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -30,7 +49,7 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/", (req, res) => {
     res.status(200).json({
         success: true,
-        message: "🐯 Tigersden Tourism API is running",
+        message: "Tigerden Tourism API is running",
     });
 });
 
@@ -41,6 +60,7 @@ app.use("/api/blogs", blogRoutes);
 app.use("/api/testimonials", testimonialRoutes);
 app.use("/api/team", teamRoutes);
 app.use("/api/coupons", couponRoutes);
+app.use("/api/page-meta", pageMetaRoutes);
 
 // ----- Admin (Protected) Routes -----
 app.use("/api/admin", adminRoutes);

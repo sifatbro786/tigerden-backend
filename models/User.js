@@ -2,11 +2,7 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
     {
-        name: {
-            type: String,
-            required: [true, "Name is required"],
-            trim: true,
-        },
+        name: { type: String, required: [true, "Name is required"], trim: true },
         email: {
             type: String,
             required: [true, "Email is required"],
@@ -23,30 +19,23 @@ const userSchema = new mongoose.Schema(
         },
         role: {
             type: String,
-            enum: ["user", "admin"],
+            enum: ["user", "admin", "super_admin"],
             default: "user",
         },
-        phone: {
-            type: String,
-            trim: true,
-        },
+        phone: { type: String, trim: true },
 
-        // ----- Loyalty System Fields -----
-        totalBookings: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-        totalSpent: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-        loyaltyTier: {
-            type: String,
-            enum: ["new", "regular", "premium"],
-            default: "new",
-        },
+        // Loyalty
+        totalBookings: { type: Number, default: 0, min: 0 },
+        totalSpent: { type: Number, default: 0, min: 0 },
+        loyaltyTier: { type: String, enum: ["new", "regular", "premium"], default: "new" },
+
+        // Google OAuth
+        authProvider: { type: String, enum: ["local", "google"], default: "local" },
+        googleId: { type: String, default: null },
+
+        // Forgot/Reset password (OTP)
+        resetPasswordOTP: { type: String, select: false, default: null },
+        resetPasswordExpires: { type: Date, select: false, default: null },
     },
     { timestamps: true },
 );

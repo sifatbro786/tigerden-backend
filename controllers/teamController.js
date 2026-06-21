@@ -52,7 +52,10 @@ export const createTeamMember = asyncHandler(async (req, res) => {
         expertise: Array.isArray(expertise)
             ? expertise
             : expertise
-              ? expertise.split(",").map((e) => e.trim())
+              ? expertise
+                    .split(",")
+                    .map((e) => e.trim())
+                    .filter(Boolean)
               : [],
         image: { url: req.file.path, public_id: req.file.filename },
         isCEO: isCEO === "true" || isCEO === true,
@@ -90,7 +93,12 @@ export const updateTeamMember = asyncHandler(async (req, res) => {
     if (expertise !== undefined) {
         member.expertise = Array.isArray(expertise)
             ? expertise
-            : expertise.split(",").map((e) => e.trim());
+            : typeof expertise === "string"
+              ? expertise
+                    .split(",")
+                    .map((e) => e.trim())
+                    .filter(Boolean)
+              : [];
     }
     if (ceoMessage !== undefined) member.ceoMessage = ceoMessage;
     if (order !== undefined) member.order = order;

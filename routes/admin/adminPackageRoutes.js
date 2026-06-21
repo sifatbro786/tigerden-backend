@@ -5,11 +5,22 @@ import {
     deletePackage,
 } from "../../controllers/packageController.js";
 import { packageUpload } from "../../config/multer.js";
+import parseJSONFields from "../../middlewares/parseJSONFields.js";
 
 const router = express.Router();
 
-router.post("/", packageUpload.array("images", 5), createPackage);
-router.put("/:id", packageUpload.array("images", 5), updatePackage);
+router.post(
+    "/",
+    packageUpload.array("images", 5),
+    parseJSONFields(["title", "description"]),
+    createPackage,
+);
+router.put(
+    "/:id",
+    packageUpload.array("images", 5),
+    parseJSONFields(["title", "description"]),
+    updatePackage,
+);
 router.delete("/:id", deletePackage);
 
 export default router;

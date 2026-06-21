@@ -8,7 +8,7 @@ import asyncHandler from "../utils/asyncHandler.js";
  * @access  Public
  */
 export const getAllBlogs = asyncHandler(async (req, res) => {
-    const blogs = await Blog.find({ isPublished: true }).sort({ createdAt: -1 });
+    const blogs = await Blog.find().sort({ createdAt: -1 });
     res.status(200).json({ success: true, count: blogs.length, data: blogs });
 });
 

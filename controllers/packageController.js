@@ -8,16 +8,7 @@ import asyncHandler from "../utils/asyncHandler.js";
  * @access  Public
  */
 export const getAllPackages = asyncHandler(async (req, res) => {
-    const { featured, flashSale } = req.query;
-    const filter = { isActive: true };
-
-    if (featured === "true") filter.featured = true;
-    if (flashSale === "true") {
-        filter.isFlashSale = true;
-        filter.flashSaleEndTime = { $gt: new Date() };
-    }
-
-    const packages = await Package.find(filter).sort({ createdAt: -1 });
+    const packages = await Package.find().sort({ createdAt: -1 });
 
     res.status(200).json({
         success: true,
