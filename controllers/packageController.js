@@ -1,6 +1,7 @@
 import Package from "../models/Package.js";
 import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import { deleteFromCloudinary, deleteManyFromCloudinary } from "../utils/cloudinaryHelper.js";
 
 /**
  * @desc    Get all active packages (supports ?featured=true & ?flashSale=true filters)
@@ -81,6 +82,10 @@ export const createPackage = asyncHandler(async (req, res) => {
  * @desc    Update an existing package
  * @route   PUT /api/admin/packages/:id
  * @access  Private/Admin
+ * @body    keepImages: JSON array of public_id strings to retain from
+ *          existing images. Any existing image NOT in this list is
+ *          deleted from both MongoDB and Cloudinary. New uploaded
+ *          files (req.files) are appended on top.
  */
 export const updatePackage = asyncHandler(async (req, res) => {
     const pkg = await Package.findById(req.params.id);
@@ -105,6 +110,22 @@ export const updatePackage = asyncHandler(async (req, res) => {
             pkg[field] = req.body[field];
         }
     });
+
+    /// ----- Image replace logic -----
+    // keepImages: array of public_ids the client still wants to keep.
+    // Defaults to "keep everything" if not provided, for backward compatibility.
+    if (req.body.keepImages !== undefined) {
+        const keepIds = Array.isArray(req.body.keepImages) ? req.body.keepImages : [];
+
+        const imagesToRemove = pkg.images.filter((img) => !keepIds.includes(img.public_id));
+        const imagesToKeep = pkg.images.filter((img) => keepIds.includes(img.public_id));
+
+        if (imagesToRemove.length > 0) {
+            await deleteManyFromCloudinary(imagesToRemove.map((img) => img.public_id));
+        }
+
+        pkg.images = imagesToKeep;
+    }
 
     // Append any newly uploaded images
     if (req.files && req.files.length > 0) {
@@ -134,6 +155,10 @@ export const deletePackage = asyncHandler(async (req, res) => {
 
     if (!pkg) {
         throw new ApiError(404, "Package not found");
+    }
+
+    if (pkg.images?.length > 0) {
+        await deleteManyFromCloudinary(pkg.images.map((img) => img.public_id));
     }
 
     res.status(200).json({

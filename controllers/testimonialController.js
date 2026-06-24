@@ -1,6 +1,7 @@
 import Testimonial from "../models/Testimonial.js";
 import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import { deleteFromCloudinary } from "../utils/cloudinaryHelper.js";
 
 /**
  * @desc    Get all approved testimonials
@@ -62,6 +63,9 @@ export const updateTestimonial = asyncHandler(async (req, res) => {
     });
 
     if (req.file) {
+        if (testimonial.image?.public_id) {
+            await deleteFromCloudinary(testimonial.image.public_id);
+        }
         testimonial.image = { url: req.file.path, public_id: req.file.filename };
     }
 
@@ -83,8 +87,9 @@ export const deleteTestimonial = asyncHandler(async (req, res) => {
     const testimonial = await Testimonial.findByIdAndDelete(req.params.id);
     if (!testimonial) throw new ApiError(404, "Testimonial not found");
 
-    res.status(200).json({
-        success: true,
-        message: "Testimonial deleted successfully",
-    });
+    if (testimonial.image?.public_id) {
+        await deleteFromCloudinary(testimonial.image.public_id);
+    }
+
+    res.status(200).json({ success: true, message: "Testimonial deleted successfully" });
 });

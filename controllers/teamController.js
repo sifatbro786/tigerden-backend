@@ -1,6 +1,7 @@
 import Team from "../models/Team.js";
 import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import { deleteFromCloudinary } from "../utils/cloudinaryHelper.js";
 
 /**
  * @desc    Get all team members (sorted by display order)
@@ -104,6 +105,9 @@ export const updateTeamMember = asyncHandler(async (req, res) => {
     if (order !== undefined) member.order = order;
 
     if (req.file) {
+        if (member.image?.public_id) {
+            await deleteFromCloudinary(member.image.public_id);
+        }
         member.image = { url: req.file.path, public_id: req.file.filename };
     }
 
@@ -125,8 +129,9 @@ export const deleteTeamMember = asyncHandler(async (req, res) => {
     const member = await Team.findByIdAndDelete(req.params.id);
     if (!member) throw new ApiError(404, "Team member not found");
 
-    res.status(200).json({
-        success: true,
-        message: "Team member deleted successfully",
-    });
+    if (member.image?.public_id) {
+        await deleteFromCloudinary(member.image.public_id);
+    }
+
+    res.status(200).json({ success: true, message: "Team member deleted successfully" });
 });

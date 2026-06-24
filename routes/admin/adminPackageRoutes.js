@@ -18,7 +18,7 @@ router.post(
 router.put(
     "/:id",
     packageUpload.array("images", 5),
-    parseJSONFields(["title", "description"]),
+    parseJSONFields(["title", "description", "keepImages"]),
     updatePackage,
 );
 router.delete("/:id", deletePackage);

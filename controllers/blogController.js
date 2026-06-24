@@ -1,6 +1,7 @@
 import Blog from "../models/Blog.js";
 import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import { deleteFromCloudinary } from "../utils/cloudinaryHelper.js";
 
 /**
  * @desc    Get all published blogs
@@ -69,6 +70,9 @@ export const updateBlog = asyncHandler(async (req, res) => {
     });
 
     if (req.file) {
+        if (blog.image?.public_id) {
+            await deleteFromCloudinary(blog.image.public_id); // delete old image first
+        }
         blog.image = { url: req.file.path, public_id: req.file.filename };
     }
 
@@ -89,6 +93,10 @@ export const updateBlog = asyncHandler(async (req, res) => {
 export const deleteBlog = asyncHandler(async (req, res) => {
     const blog = await Blog.findByIdAndDelete(req.params.id);
     if (!blog) throw new ApiError(404, "Blog not found");
+
+    if (blog.image?.public_id) {
+        await deleteFromCloudinary(blog.image.public_id);
+    }
 
     res.status(200).json({ success: true, message: "Blog deleted successfully" });
 });
