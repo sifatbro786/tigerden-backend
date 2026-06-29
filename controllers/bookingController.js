@@ -4,7 +4,22 @@ import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { sendBookingConfirmationEmail } from "../services/emailService.js";
 
-const VALID_PAYMENT_METHODS = ["bkash", "nagad", "rocket"];
+const VALID_PAYMENT_METHODS = ["bkash", "nagad"];
+
+const VALID_STATUS_TRANSITIONS = {
+  pending: {
+    to: ['confirmed', 'cancelled'],
+    paymentStatus: ['unverified', 'paid', 'failed']
+  },
+  confirmed: {
+    to: ['cancelled'], // Can cancel a confirmed booking
+    paymentStatus: ['paid']
+  },
+  cancelled: {
+    to: [], // Terminal state - no further transitions
+    paymentStatus: ['failed']
+  }
+};
 
 /**
  * @desc    Create a new booking (manual payment submission)
@@ -38,7 +53,7 @@ export const createBooking = asyncHandler(async (req, res) => {
   const booking = await Booking.create({
     user: req.user._id,
     package: pkg._id,
-    totalAmount: pkg.price,
+    totalAmount: pkg.discountedPrice,
     paymentMethod,
     senderNumber,
     transactionId: transactionId.trim(),
@@ -99,40 +114,54 @@ export const getAllBookings = asyncHandler(async (req, res) => {
  */
 export const adminVerifyPayment = asyncHandler(async (req, res) => {
   const booking = await Booking.findById(req.params.id);
-  if (!booking) {
-    throw new ApiError(404, "Booking not found");
+  if (!booking) throw new ApiError(404, "Booking not found");
+
+  // Validate state transition
+  if (!VALID_STATUS_TRANSITIONS[booking.bookingStatus]?.to.includes('confirmed')) {
+    throw new ApiError(400, `Cannot confirm booking in status: ${booking.bookingStatus}`);
   }
 
-  if (booking.bookingStatus === "confirmed") {
-    throw new ApiError(400, "This booking has already been confirmed");
+  // Atomic update with versioning
+  const updatedBooking = await Booking.findByIdAndUpdate(
+    req.params.id,
+    {
+      $set: {
+        bookingStatus: 'confirmed',
+        paymentStatus: 'paid',
+        adminNote: req.body.adminNote || booking.adminNote,
+        confirmedAt: new Date()
+      }
+    },
+    { 
+      new: true,
+      runValidators: true
+    }
+  ).populate('user', 'name email')
+   .populate('package', 'title price');
+
+  if (!updatedBooking) {
+    throw new ApiError(404, 'Booking not found or already updated');
   }
 
-  booking.bookingStatus = "confirmed";
-  booking.paymentStatus = "paid";
-  if (req.body.adminNote) booking.adminNote = req.body.adminNote;
-
-  await booking.save();
-
-  // Populate user + package details for the confirmation email
-  const populatedBooking = await Booking.findById(booking._id)
-    .populate("user", "name email")
-    .populate("package", "title price");
-
-  if (populatedBooking.user?.email) {
-    await sendBookingConfirmationEmail(populatedBooking.user.email, populatedBooking.user.name, {
-      packageTitle: populatedBooking.package?.title?.en || "Your Package",
-      totalAmount: populatedBooking.totalAmount,
-      transactionId: populatedBooking.transactionId,
-    });
+  // Email should NOT block the update - fire and forget with error handling
+  if (updatedBooking.user?.email) {
+    sendBookingConfirmationEmail(
+      updatedBooking.user.email, 
+      updatedBooking.user.name, 
+      {
+        packageTitle: updatedBooking.package?.title?.en || "Your Package",
+        totalAmount: updatedBooking.totalAmount,
+        transactionId: updatedBooking.transactionId,
+      }
+    ).catch(err => console.error('[EMAIL_FAILURE]', err.message));
   }
 
   res.status(200).json({
     success: true,
-    message: "Payment verified and booking confirmed. Confirmation email sent.",
-    data: populatedBooking,
+    message: "Payment verified and booking confirmed.",
+    data: updatedBooking,
   });
 });
-
 /**
  * @desc    Admin rejects/cancels a booking (e.g. fraudulent transaction ID)
  * @route   PATCH /api/admin/bookings/:id/reject
@@ -140,16 +169,22 @@ export const adminVerifyPayment = asyncHandler(async (req, res) => {
  * @body    { adminNote? }
  */
 export const adminRejectBooking = asyncHandler(async (req, res) => {
-  const booking = await Booking.findById(req.params.id);
+  const booking = await Booking.findByIdAndUpdate(
+    req.params.id,
+    {
+      $set: {
+        bookingStatus: 'cancelled',
+        paymentStatus: 'failed',
+        adminNote: req.body.adminNote || booking.adminNote,
+        rejectedAt: new Date()
+      }
+    },
+    { new: true, runValidators: true }
+  );
+
   if (!booking) {
-    throw new ApiError(404, "Booking not found");
+    throw new ApiError(404, 'Booking not found');
   }
-
-  booking.bookingStatus = "cancelled";
-  booking.paymentStatus = "failed";
-  if (req.body.adminNote) booking.adminNote = req.body.adminNote;
-
-  await booking.save();
 
   res.status(200).json({
     success: true,

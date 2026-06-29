@@ -72,8 +72,45 @@ export const calculateCouponDiscount = (coupon, price) => {
  * application of the coupon to an actual booking/order.
  * @param {import("mongoose").Document} coupon
  */
-export const incrementCouponUsage = async (coupon) => {
-    coupon.usedCount += 1;
-    await coupon.save();
-    return coupon;
+export const incrementCouponUsage = async (couponId) => {
+  const updated = await Coupon.findByIdAndUpdate(
+    couponId,
+    {
+      $inc: { usedCount: 1 },
+      $set: { updatedAt: new Date() }
+    },
+    {
+      new: true,
+      runValidators: true
+    }
+  );
+
+  if (!updated) {
+    throw new ApiError(404, 'Coupon not found');
+  }
+
+  // Check if we've exceeded the limit
+  if (updated.usedCount > updated.usageLimit) {
+    // Optionally deactivate the coupon
+    await Coupon.findByIdAndUpdate(couponId, {
+      $set: { isActive: false }
+    });
+    throw new ApiError(400, 'Coupon usage limit exceeded');
+  }
+
+  return updated;
 };
+
+// In booking verification flow:
+// When confirming booking, apply coupon usage atomically
+// if (couponCode) {
+//   try {
+//     const coupon = await Coupon.findOne({ code: couponCode.toUpperCase() });
+//     if (coupon) {
+//       await incrementCouponUsage(coupon._id);
+//     }
+//   } catch (error) {
+//     // Rollback booking if coupon increment fails
+//     throw new ApiError(400, 'Failed to apply coupon: ' + error.message);
+//   }
+// }

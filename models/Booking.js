@@ -27,11 +27,12 @@ const bookingSchema = new mongoose.Schema(
       required: [true, "Sender number is required for manual verification"],
       trim: true,
     },
-    transactionId: {
+   transactionId: {
       type: String,
       required: [true, "Transaction ID is required"],
-      unique: true, // prevents duplicate submission / replay fraud
+      unique: true,
       trim: true,
+      index: true, // Explicit index for performance
     },
     bookingStatus: {
       type: String,
@@ -52,7 +53,12 @@ const bookingSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-bookingSchema.index({ user: 1, createdAt: -1 });
+// Compound index for user + status queries
+bookingSchema.index({ user: 1, bookingStatus: 1, createdAt: -1 });
+// Index for admin filtering
+bookingSchema.index({ bookingStatus: 1, createdAt: -1 });
+// Index for package lookup
+bookingSchema.index({ package: 1, createdAt: -1 });
 
 const Booking = mongoose.model("Booking", bookingSchema);
 export default Booking;

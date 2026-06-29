@@ -1,4 +1,5 @@
 import Coupon from "../models/Coupon.js";
+import Package from "../models/Package.js";
 import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { validateCoupon, calculateCouponDiscount } from "../services/couponService.js";
@@ -137,4 +138,21 @@ export const deleteCoupon = asyncHandler(async (req, res) => {
     if (!coupon) throw new ApiError(404, "Coupon not found");
 
     res.status(200).json({ success: true, message: "Coupon deleted successfully" });
+});
+
+export const applyCouponToPackage = asyncHandler(async (req, res) => {
+  const { code, packageId } = req.body;
+
+  const pkg = await Package.findById(packageId);
+  if (!pkg) throw new ApiError(404, "Package not found");
+
+  const coupon = await validateCoupon(code);
+
+  // ✅ always use discountedPrice, never the deprecated `price` field
+  const { discountAmount, finalPrice } = calculateCouponDiscount(coupon, pkg.discountedPrice);
+
+  res.status(200).json({
+    success: true,
+    data: { originalPrice: pkg.discountedPrice, discountAmount, finalPrice },
+  });
 });
