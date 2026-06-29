@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-
 import connectDB from "./config/db.js";
 import errorMiddleware from "./middlewares/errorMiddleware.js";
 
@@ -17,7 +16,6 @@ import bookingRoutes from "./routes/bookingRoutes.js";
 
 // Protected admin route group (auth + admin middleware applied internally)
 import adminRoutes from "./routes/admin/index.js";
-// import seedSuperAdmin from "./utils/seedAdmin.js";
 
 dotenv.config();
 

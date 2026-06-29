@@ -4,12 +4,28 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { deleteFromCloudinary } from "../utils/cloudinaryHelper.js";
 
 /**
+ * @desc    Get all testimonials for admin (including unapproved)
+ * @route   GET /api/admin/testimonials
+ * @access  Private/Admin
+ */
+export const getAllTestimonialsAdmin = asyncHandler(async (req, res) => {
+    const testimonials = await Testimonial.find().sort({ createdAt: -1 });
+    res.status(200).json({
+        success: true,
+        count: testimonials.length,
+        data: testimonials,
+    });
+});
+
+/**
  * @desc    Get all approved testimonials
  * @route   GET /api/testimonials
  * @access  Public
  */
 export const getAllTestimonials = asyncHandler(async (req, res) => {
-    const testimonials = await Testimonial.find().sort({ createdAt: -1 });
+    const testimonials = await Testimonial.find({ isApproved: true }).sort({
+        createdAt: -1,
+    });
     res.status(200).json({
         success: true,
         count: testimonials.length,

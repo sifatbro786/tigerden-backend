@@ -4,12 +4,22 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { deleteFromCloudinary } from "../utils/cloudinaryHelper.js";
 
 /**
+ * @desc    Get all blogs for admin (including unpublished/drafts)
+ * @route   GET /api/admin/blogs
+ * @access  Private/Admin
+ */
+export const getAllBlogsAdmin = asyncHandler(async (req, res) => {
+    const blogs = await Blog.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, count: blogs.length, data: blogs });
+});
+
+/**
  * @desc    Get all published blogs
  * @route   GET /api/blogs
  * @access  Public
  */
 export const getAllBlogs = asyncHandler(async (req, res) => {
-    const blogs = await Blog.find().sort({ createdAt: -1 });
+    const blogs = await Blog.find({ isPublished: true }).sort({ createdAt: -1 });
     res.status(200).json({ success: true, count: blogs.length, data: blogs });
 });
 
