@@ -143,3 +143,82 @@ export const sendBookingConfirmationEmail = async (toEmail, name, bookingDetails
         return false;
     }
 };
+
+/**
+ * Sends a notification email to the admin when a new contact inquiry
+ * is submitted via the "Contact Us" form.
+ * @param {string} adminEmail
+ * @param {{ fullName: string, phone: string, email: string, serviceType: string, message?: string }} inquiryDetails
+ */
+export const sendContactInquiryEmail = async (adminEmail, inquiryDetails) => {
+    const { fullName, phone, email, serviceType, message } = inquiryDetails;
+
+    try {
+        const result = await safeSend({
+            from: `"Tigersden Tourism" <${process.env.GMAIL_USER}>`,
+            to: adminEmail,
+            subject: `📩 New Inquiry: ${serviceType} — ${fullName}`,
+            html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #059669, #0d9488); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="color: #fff; margin: 0;">Tigerden New Contact Inquiry</h1>
+          </div>
+          <div style="border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; padding: 24px;">
+            <p>A new inquiry has been submitted through the website contact form.</p>
+
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: #6b7280; width: 35%;">Full Name</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${fullName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Phone</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${phone}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Email</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${email}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; ${message ? "border-bottom: 1px solid #e5e7eb;" : ""} color: #6b7280;">Service Type</td>
+                <td style="padding: 10px; ${message ? "border-bottom: 1px solid #e5e7eb;" : ""}">
+                  <span style="background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;">
+                    ${serviceType}
+                  </span>
+                </td>
+              </tr>
+              ${
+                  message
+                      ? `
+              <tr>
+                <td style="padding: 10px; color: #6b7280; vertical-align: top;">Message</td>
+                <td style="padding: 10px;">${message}</td>
+              </tr>
+              `
+                      : ""
+              }
+            </table>
+
+            <p style="margin-top: 24px;">
+              <a href="mailto:${email}" style="background: linear-gradient(135deg, #059669, #0d9488); color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; display: inline-block;">
+                Reply to ${fullName}
+              </a>
+            </p>
+
+            <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">
+              This is an automated notification from the Tigersden Tourism contact form.
+            </p>
+          </div>
+        </div>
+      `,
+        });
+
+        if (!result) {
+            console.error(`[EMAIL_FAILURE] Failed to send contact inquiry notification to ${adminEmail}`);
+        }
+        return result;
+    } catch (error) {
+        console.error(`[EMAIL_FAILURE] Exception in sendContactInquiryEmail:`, error.message);
+        return false;
+    }
+};

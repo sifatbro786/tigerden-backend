@@ -15,6 +15,7 @@ import adminCouponRoutes from "./adminCouponRoutes.js";
 import adminPageMetaRoutes from "./adminPageMetaRoutes.js";
 import adminBookingRoutes from "./adminBookingRoutes.js";
 import adminCategoryRoutes from "./adminCategoryRoutes.js";
+import adminContactRoutes from "./adminContactRoutes.js";
 
 const router = express.Router();
 
@@ -35,5 +36,6 @@ router.use("/testimonials", adminTestimonialRoutes);
 router.use("/coupons", adminCouponRoutes);
 router.use("/page-meta", adminPageMetaRoutes);
 router.use("/categories", adminCategoryRoutes);
+router.use("/contact", adminContactRoutes);
 
 export default router;

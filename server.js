@@ -14,6 +14,7 @@ import couponRoutes from "./routes/couponRoutes.js";
 import pageMetaRoutes from "./routes/pageMetaRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
 
 // Protected admin route group (auth + admin middleware applied internally)
 import adminRoutes from "./routes/admin/index.js";
@@ -63,6 +64,7 @@ app.use("/api/coupons", couponRoutes);
 app.use("/api/page-meta", pageMetaRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/contact", contactRoutes);
 
 // ----- Admin (Protected) Routes -----
 app.use("/api/admin", adminRoutes);
