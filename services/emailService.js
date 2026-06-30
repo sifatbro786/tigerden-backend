@@ -93,42 +93,53 @@ export const sendOTPEmail = async (toEmail, otp) => {
  * @param {{ packageTitle: string, totalAmount: number, transactionId: string }} bookingDetails
  */
 export const sendBookingConfirmationEmail = async (toEmail, name, bookingDetails) => {
-  const { packageTitle, totalAmount, transactionId } = bookingDetails;
+    const { packageTitle, totalAmount, transactionId } = bookingDetails;
 
-  return safeSend({
-    from: `"Tigersden Tourism" <${process.env.GMAIL_USER}>`,
-    to: toEmail,
-    subject: "🎉 Your Booking is Confirmed! — Tigersden Tourism",
-    html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto;">
-        <div style="background: linear-gradient(135deg, #059669, #0d9488); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
-          <h1 style="color: #fff; margin: 0;">🐯 Booking Confirmed!</h1>
+    try {
+        const result = await safeSend({
+            from: `"Tigersden Tourism" <${process.env.GMAIL_USER}>`,
+            to: toEmail,
+            subject: "🎉 Your Booking is Confirmed! — Tigersden Tourism",
+            html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #059669, #0d9488); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="color: #fff; margin: 0;">🐯 Booking Confirmed!</h1>
+          </div>
+          <div style="border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; padding: 24px;">
+            <p>Hi ${name},</p>
+            <p>Great news! We've manually verified your payment, and your booking is now
+            <strong style="color: #059669;">officially confirmed</strong>.</p>
+
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Package</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${packageTitle}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Total Paid</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; font-weight: 600;">৳${totalAmount}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; color: #6b7280;">Transaction ID</td>
+                <td style="padding: 10px; font-weight: 600;">${transactionId}</td>
+              </tr>
+            </table>
+
+            <p>We can't wait to have you on this journey with us. If you have any questions,
+            just reply to this email.</p>
+            <p>Happy travels!<br/>The Tigersden Tourism Team 🐯</p>
+          </div>
         </div>
-        <div style="border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; padding: 24px;">
-          <p>Hi ${name},</p>
-          <p>Great news! We've manually verified your payment, and your booking is now
-          <strong style="color: #059669;">officially confirmed</strong>.</p>
+      `,
+        });
 
-          <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-            <tr>
-              <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Package</td>
-              <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${packageTitle}</td>
-            </tr>
-            <tr>
-              <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Total Paid</td>
-              <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; font-weight: 600;">$${totalAmount}</td>
-            </tr>
-            <tr>
-              <td style="padding: 10px; color: #6b7280;">Transaction ID</td>
-              <td style="padding: 10px; font-weight: 600;">${transactionId}</td>
-            </tr>
-          </table>
-
-          <p>We can't wait to have you on this journey with us. If you have any questions,
-          just reply to this email.</p>
-          <p>Happy travels!<br/>The Tigersden Tourism Team 🐯</p>
-        </div>
-      </div>
-    `,
-  });
+        if (!result) {
+            console.error(`[EMAIL_FAILURE] Failed to send confirmation email to ${toEmail}`);
+            // Optional: Save to database for retry
+        }
+        return result;
+    } catch (error) {
+        console.error(`[EMAIL_FAILURE] Exception in sendBookingConfirmationEmail:`, error.message);
+        return false;
+    }
 };
