@@ -10,11 +10,17 @@ import parseJSONFields from "../../middlewares/parseJSONFields.js";
 
 const router = express.Router();
 
+const uploadFields = packageUpload.fields([
+  { name: "coverImage", maxCount: 1 },
+  { name: "gallery", maxCount: 8 },
+]);
+
 const PACKAGE_JSON_FIELDS = [
   "title",
   "shortDescription",
   "description",
   "idealMonths",
+  "tags",
   "keepImages",
   "availableDates",
   "itinerary",
@@ -28,19 +34,19 @@ const PACKAGE_JSON_FIELDS = [
   "locationMap",
   "travelTips",
   "faqs",
+  "reviews",
 ];
 
 router.get("/", getAllPackagesAdmin);
-
 router.post(
   "/",
-  packageUpload.array("images", 5),
+  uploadFields,
   parseJSONFields(PACKAGE_JSON_FIELDS),
   createPackage
 );
 router.put(
   "/:id",
-  packageUpload.array("images", 5),
+  uploadFields,
   parseJSONFields(PACKAGE_JSON_FIELDS),
   updatePackage
 );
